@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: signedrsvp-web
+  namespace: signatureceo
+  labels:
+    name: signedrsvp-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: signedrsvp-web
+  template:
+    metadata:
+      labels:
+        run: signedrsvp-web
+    spec:
+      containers:
+        - name: signedrsvp-web
+          image: "ghcr.io/v3xlabs/signed-rsvp-web:edge"
+          imagePullPolicy: "Always"
+          ports:
+            - containerPort: 3000
+              name: "yes"
+              protocol: "TCP"
+          resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: signedrsvp-web
+  namespace: signatureceo
+spec:
+  selector:
+    run: signedrsvp-web
+  ports:
+  - port: 3000
+    targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: signedrsvp-web
+  namespace: signatureceo
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.priority: "42"
+spec:
+  rules:
+    - host: signed.rsvp
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: signedrsvp-web
+                port:
+                  number: 3000
